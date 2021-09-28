@@ -78,9 +78,9 @@
     @try {
       NSLog(@"connect device begin -> %@", [device objectForKey:@"name"]);
       CBPeripheral *peripheral = [_scannedPeripherals objectForKey:[device objectForKey:@"address"]];
-        
+      __weak typeof(self) weakSelf = self;
       self.state = ^(ConnectState state) {
-        [self updateConnectState:state];
+        [weakSelf updateConnectState:state];
       };
       [Manager connectPeripheral:peripheral options:nil timeout:2 connectBlack: self.state];
       
@@ -127,7 +127,7 @@
             [self.scannedPeripherals setObject:peripheral forKey:[[peripheral identifier] UUIDString]];
             
             NSDictionary *device = [NSDictionary dictionaryWithObjectsAndKeys:peripheral.identifier.UUIDString,@"address",peripheral.name,@"name",nil,@"type",nil];
-            [_channel invokeMethod:@"ScanResult" arguments:device];
+            [self->_channel invokeMethod:@"ScanResult" arguments:device];
         }
     }];
     
@@ -160,10 +160,14 @@
         }
         
          NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:ret,@"id",nil];
-        if(_stateStreamHandler.sink != nil) {
+        if(self->_stateStreamHandler.sink != nil) {
           self.stateStreamHandler.sink([dict objectForKey:@"id"]);
         }
     });
+}
+
+- (void)centralManagerDidUpdateState:(nonnull CBCentralManager *)central {
+    
 }
 
 @end
